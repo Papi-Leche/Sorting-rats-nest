@@ -1,0 +1,41 @@
+#include <Servo.h>
+
+// Declare the Servo pin
+int servoPin = 28;
+
+// Declare IR pins
+const int IR_PIN = 3;        // IR transmitter
+const int IR_RECV_PIN = 29;  // IR receiver
+
+// Create a servo object
+Servo Servo1;
+
+// Servo positions
+const int CLOSED_POS = 0;    // Position when trap door is closed
+const int OPEN_POS = 180;     // Position when trap door is open
+
+void setup() {
+  Servo1.attach(servoPin);    // Attach servo
+  pinMode(IR_PIN, OUTPUT);    // IR transmitter as output
+  pinMode(IR_RECV_PIN, INPUT); // IR receiver as input
+  digitalWrite(IR_PIN, HIGH); // Keep IR transmitter on
+  Servo1.write(CLOSED_POS);   // Start with trap door closed
+  Serial.begin(9600);
+}
+
+void loop() {
+  int sensorValue = digitalRead(IR_RECV_PIN);  // Read IR receiver
+  
+  if (sensorValue == LOW) {  // When signal is blocked (ball bearing detected)
+    Serial.println("Bearing detected!");
+    Servo1.write(OPEN_POS);  // Open trap door
+    delay(500);              // Wait for ball to fall through (adjust as needed)
+    Servo1.write(CLOSED_POS); // Close trap door
+    delay(100);              // Small delay before next detection
+  } else {
+    Serial.println("Waiting for ball bearing...");
+    Servo1.write(CLOSED_POS); // Ensure door stays closed when no detection
+  }
+  
+  delay(50);  // Small delay to prevent rapid triggering
+}
