@@ -1,0 +1,172 @@
+#include <Servo.h>
+
+// Pin definitions
+const int SOLENOID_PIN = 27;    // Solenoid control pin
+const int SERVO1_PIN = 28;      // First servo control pin
+const int SERVO2_PIN = 22;  
+const int SOLENOID2_PIN = 26;    
+const int SERVO3_PIN = 24;      
+const int SERVO4_PIN = 23;
+const int Solenoid3_Pin = 25; 
+const int Motor_Pin = 8;   
+// Servo objects
+Servo Servo1;
+Servo Servo2;
+Servo Servo3;
+Servo Servo4;
+Servo Motor;
+// Servo positions
+const int CLOSED_POS = 90;      
+const int OPEN_POS = 0; 
+const int CLOSED_POS1 = 87;       
+const int OPEN_POS1 = 0;        
+const int CLOSED_POS2 = 92;       
+const int OPEN_POS2 = 0; 
+
+
+// Timing constants (in milliseconds)
+const unsigned long SOLENOID_INTERVAL = 2000; 
+const unsigned long SOLENOID_PULSE = 56;      
+const unsigned long SERVO1_OPEN_OFFSET = 400;  
+const unsigned long SERVO1_OPEN_DURATION = 200; 
+const unsigned long SERVO2_OPEN_OFFSET = 800;  
+const unsigned long SERVO2_OPEN_DURATION = 200; 
+
+
+
+const unsigned long SOLENOID2_PULSE = 48;      
+const unsigned long SERVO3_OPEN_OFFSET = 550;  
+const unsigned long SERVO3_OPEN_DURATION = 200; 
+const unsigned long SERVO4_OPEN_OFFSET = 950;  
+const unsigned long SERVO4_OPEN_DURATION = 200;
+// Timing variables
+unsigned long lastSolenoidFire = 0;           // Last time solenoid retracted
+bool solenoidState = false;                   // Solenoid retracted (true) or extended (false)
+bool servo1State = false;                     // Servo 1 open (true) or closed (false)
+bool servo2State = false;                     // Servo 2 open (true) or closed (false)
+
+unsigned long lastSolenoid2Fire = 0;           // Last time solenoid retracted
+bool solenoid2State = false;                   // Solenoid retracted (true) or extended (false)
+bool servo3State = false;                     // Servo 1 open (true) or closed (false)
+bool servo4State = false;  
+
+void setup() {
+  // Initialize pins
+  Motor.write(150);
+  pinMode(Solenoid3_Pin, OUTPUT);
+  digitalWrite(Solenoid3_Pin, LOW);
+  pinMode(SOLENOID_PIN, OUTPUT);
+  digitalWrite(SOLENOID_PIN, HIGH); 
+  pinMode(SOLENOID2_PIN, OUTPUT);
+  digitalWrite(SOLENOID2_PIN, HIGH);           
+  Servo1.attach(SERVO1_PIN, 500, 2500); 
+  Servo2.attach(SERVO2_PIN, 500, 2500); 
+  Servo3.attach(SERVO3_PIN, 500, 2500); 
+  Servo4.attach(SERVO4_PIN, 500, 2500); 
+  Motor.attach(Motor_Pin, 500, 2500);
+  
+  Servo1.write(CLOSED_POS);            
+  Servo2.write(CLOSED_POS); 
+  Servo3.write(CLOSED_POS1);           
+  Servo4.write(CLOSED_POS2);                      
+ 
+  Serial.begin(9600);
+}
+
+void loop() {
+  unsigned long currentTime = millis();
+  unsigned long timeSinceFire = currentTime - lastSolenoidFire;
+
+  // Solenoid 1 control
+  if (!solenoidState && timeSinceFire >= SOLENOID_INTERVAL) {
+    digitalWrite(SOLENOID_PIN, LOW); // Energize solenoid 1 (retracted)
+    solenoidState = true;
+    lastSolenoidFire = currentTime; 
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Solenoid 1 retracted!");
+  } else if (solenoidState && timeSinceFire >= SOLENOID_PULSE) {
+    digitalWrite(SOLENOID_PIN, HIGH); 
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Solenoid 1 extended!");
+  }
+
+  // Solenoid 2 control
+  if (!solenoid2State && timeSinceFire >= SOLENOID_INTERVAL) {
+    digitalWrite(SOLENOID2_PIN, LOW); // Energize solenoid 2 (retracted)
+    solenoid2State = true;
+    
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Solenoid 2 retracted!");
+  } else if (solenoid2State && timeSinceFire >= SOLENOID2_PULSE) {
+    digitalWrite(SOLENOID2_PIN, HIGH); // De-energize solenoid 2 (extended)
+    solenoid2State = false;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Solenoid 2 extended!");
+  }
+
+  // Servo 1 control
+  if (!servo1State && timeSinceFire >= SERVO1_OPEN_OFFSET && timeSinceFire < SERVO1_OPEN_OFFSET + SERVO1_OPEN_DURATION) {
+    Servo1.write(OPEN_POS);
+    servo1State = true;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 1 opened.");
+  } else if (servo1State && timeSinceFire >= SERVO1_OPEN_OFFSET + SERVO1_OPEN_DURATION) {
+    Servo1.write(CLOSED_POS);
+    servo1State = false;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 1 closed.");
+  }
+
+  // Servo 2 control
+  if (!servo2State && timeSinceFire >= SERVO2_OPEN_OFFSET && timeSinceFire < SERVO2_OPEN_OFFSET + SERVO2_OPEN_DURATION) {
+    Servo2.write(OPEN_POS);
+    servo2State = true;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 2 opened.");
+  } else if (servo2State && timeSinceFire >= SERVO2_OPEN_OFFSET + SERVO2_OPEN_DURATION) {
+    Servo2.write(CLOSED_POS);
+    servo2State = false;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 2 closed.");
+  }
+
+  // Servo 3 control
+  if (!servo3State && timeSinceFire >= SERVO3_OPEN_OFFSET && timeSinceFire < SERVO3_OPEN_OFFSET + SERVO3_OPEN_DURATION) {
+    Servo3.write(OPEN_POS1);
+    servo3State = true;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 3 opened.");
+  } else if (servo3State && timeSinceFire >= SERVO3_OPEN_OFFSET + SERVO3_OPEN_DURATION) {
+    Servo3.write(CLOSED_POS1);
+    servo3State = false;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 3 closed.");
+  }
+
+  // Servo 4 control
+  if (!servo4State && timeSinceFire >= SERVO4_OPEN_OFFSET && timeSinceFire < SERVO4_OPEN_OFFSET + SERVO4_OPEN_DURATION) {
+    Servo4.write(OPEN_POS2);
+    servo4State = true;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 4 opened.");
+  } else if (servo4State && timeSinceFire >= SERVO4_OPEN_OFFSET + SERVO4_OPEN_DURATION) {
+    Servo4.write(CLOSED_POS2);
+    servo4State = false;
+    Serial.print("Time: ");
+    Serial.print(timeSinceFire);
+    Serial.println("ms - Servo 4 closed.");
+  }
+
+  delay(10); // Small delay for stability
+}
